@@ -71,8 +71,8 @@ export function useTranslation() {
         setIsLoading(false)
     }, [])
 
-    // 200msデバウンス
+    // 200msデバウンス版（自動翻訳用、現在は未使用）
     const debouncedTranslate = useRef(debounce(translateText, 200)).current
 
-    return { result, history, isLoading, error, debouncedTranslate }
+    return { result, history, isLoading, error, translate: translateText, debouncedTranslate }
 }

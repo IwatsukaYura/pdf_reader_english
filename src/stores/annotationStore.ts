@@ -15,7 +15,7 @@ interface AnnotationState {
     removeHighlight: (id: string) => void
     changeHighlightColor: (id: string, color: HighlightColor) => void
 
-    addNote: (note: Omit<Note, 'id' | 'createdAt'>) => void
+    addNote: (note: Omit<Note, 'id' | 'createdAt' | 'updatedAt'>) => void
     updateNote: (id: string, content: string) => void
     removeNote: (id: string) => void
 
@@ -61,14 +61,21 @@ export const useAnnotationStore = create<AnnotationState>((set, get) => ({
         set((state) => ({
             notes: [
                 ...state.notes,
-                { ...note, id: `n_${nanoid()}`, createdAt: new Date().toISOString() }
+                {
+                    ...note,
+                    id: `n_${nanoid()}`,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                }
             ],
             isDirty: true
         })),
 
     updateNote: (id, content) =>
         set((state) => ({
-            notes: state.notes.map((n) => (n.id === id ? { ...n, content } : n)),
+            notes: state.notes.map((n) =>
+                n.id === id ? { ...n, content, updatedAt: new Date().toISOString() } : n
+            ),
             isDirty: true
         })),
 

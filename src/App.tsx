@@ -14,12 +14,12 @@ export default function App() {
     const [selectedText, setSelectedText] = useState('')
     const [isDragOver, setIsDragOver] = useState(false)
     const [showSettings, setShowSettings] = useState(false)
+    const [pendingNote, setPendingNote] = useState<{ text: string; page: number } | null>(null)
 
     const { setPdfPath } = usePdfStore()
     const { loadAnnotations, saveAnnotations } = useAnnotations()
-    const { result, history, isLoading, error, debouncedTranslate } = useTranslation()
+    const { result, history, isLoading, error, translate } = useTranslation()
 
-    // PDFを開く処理
     const openPdf = useCallback(
         async (path: string) => {
             if (!path) return
@@ -29,74 +29,56 @@ export default function App() {
         [setPdfPath, loadAnnotations]
     )
 
-    // Toolbarボタンからのカスタムイベント
     useEffect(() => {
         const handler = (e: Event) => {
-            const path = (e as CustomEvent<{ path: string }>).detail.path
-            openPdf(path)
+            openPdf((e as CustomEvent<{ path: string }>).detail.path)
         }
         window.addEventListener('pdf:open', handler)
         return () => window.removeEventListener('pdf:open', handler)
     }, [openPdf])
 
-    // ドラッグ&ドロップでPDFを開く
     useEffect(() => {
-        const handleDragOver = (e: DragEvent) => {
-            e.preventDefault()
-            if (e.dataTransfer) e.dataTransfer.dropEffect = 'copy'
-            setIsDragOver(true)
-        }
-        const handleDragLeave = () => setIsDragOver(false)
-
-        const handleDrop = async (e: DragEvent) => {
-            e.preventDefault()
-            setIsDragOver(false)
-
+        const onDragOver = (e: DragEvent) => { e.preventDefault(); setIsDragOver(true) }
+        const onDragLeave = () => setIsDragOver(false)
+        const onDrop = async (e: DragEvent) => {
+            e.preventDefault(); setIsDragOver(false)
             const file = e.dataTransfer?.files[0]
             if (!file) return
-
-            // ファイル拡張子でPDFを判定（MIMEタイプは環境によって異なる場合がある）
-            const isPdf =
-                file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf')
-            if (!isPdf) return
-
-            // Electron 26+ webUtils.getPathForFile でセキュアにパスを取得
+            if (!file.type.includes('pdf') && !file.name.endsWith('.pdf')) return
             try {
-                const filePath = window.electronAPI.getFilePath(file)
-                if (filePath) {
-                    openPdf(filePath)
-                }
+                const p = window.electronAPI.getFilePath(file); if (p) openPdf(p)
             } catch {
-                // フォールバック: Electron独自のfile.path（古い方式）
-                const electronFile = file as File & { path?: string }
-                if (electronFile.path) {
-                    openPdf(electronFile.path)
-                }
+                const f = file as File & { path?: string }; if (f.path) openPdf(f.path)
             }
         }
-
-        window.addEventListener('dragover', handleDragOver)
-        window.addEventListener('dragleave', handleDragLeave)
-        window.addEventListener('drop', handleDrop)
+        window.addEventListener('dragover', onDragOver)
+        window.addEventListener('dragleave', onDragLeave)
+        window.addEventListener('drop', onDrop)
         return () => {
-            window.removeEventListener('dragover', handleDragOver)
-            window.removeEventListener('dragleave', handleDragLeave)
-            window.removeEventListener('drop', handleDrop)
+            window.removeEventListener('dragover', onDragOver)
+            window.removeEventListener('dragleave', onDragLeave)
+            window.removeEventListener('drop', onDrop)
         }
     }, [openPdf])
 
-    // テキスト選択 → 翻訳
-    const handleTextSelected = useCallback(
+    // 🔤 翻訳ボタンが押された時だけ呼ばれる（API節約）
+    const handleTranslateRequest = useCallback(
         (text: string) => {
             setSelectedText(text)
-            debouncedTranslate(text)
+            translate(text)   // DeepL API呼び出し
         },
-        [debouncedTranslate]
+        [translate]
     )
 
+    const handleAddNoteRequest = useCallback((text: string, page: number) => {
+        setPendingNote({ text, page })
+    }, [])
+
     return (
-        <div className={`flex flex-col h-screen bg-gray-900 text-gray-100 overflow-hidden transition-all ${isDragOver ? 'ring-2 ring-inset ring-blue-400' : ''}`}>
-            {/* ツールバー */}
+        <div
+            className={`flex flex-col h-screen bg-gray-900 text-gray-100 overflow-hidden ${isDragOver ? 'ring-2 ring-inset ring-blue-400' : ''
+                }`}
+        >
             <Toolbar
                 selectedColor={selectedColor}
                 onColorChange={setSelectedColor}
@@ -104,12 +86,12 @@ export default function App() {
                 onOpenSettings={() => setShowSettings(true)}
             />
 
-            {/* メインエリア（PDF + サイドパネル） */}
             <div className="flex flex-1 overflow-hidden">
                 <div className="flex-1 overflow-hidden">
                     <PdfViewer
                         selectedColor={selectedColor}
-                        onTextSelected={handleTextSelected}
+                        onTranslateRequest={handleTranslateRequest}
+                        onAddNoteRequest={handleAddNoteRequest}
                     />
                 </div>
 
@@ -120,13 +102,12 @@ export default function App() {
                     translationError={error}
                     selectedText={selectedText}
                     width={320}
+                    pendingNote={pendingNote}
+                    onPendingNoteHandled={() => setPendingNote(null)}
                 />
             </div>
 
-            {/* ステータスバー */}
             <StatusBar />
-
-            {/* 設定モーダル */}
             {showSettings && <SettingsModal onClose={() => setShowSettings(false)} />}
         </div>
     )
