@@ -27,12 +27,7 @@
 
 テキストを選ぶと、**その場に小さなポップアップが出現**します。
 
-```
-選択したテキスト上に表示
-  ┌────────────────────────────┐
-  │  🔤 翻訳  │ 🟡 ハイライト │ 📝 メモ │
-  └────────────────────────────┘
-```
+![App Screenshot](docs/app.png)
 
 アプリ切り替え・モード切り替え・タブ操作は一切不要。  
 3つのアクションが1タップで選べます。
@@ -210,7 +205,7 @@ DeepL API キー: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx:fx
 ## 🤝 コントリビューション
 
 Issue や Pull Request は大歓迎です。  
-機能リクエスト・バグ報告は [Issues](https://github.com/your-username/pdf_reader/issues) へどうぞ。
+機能リクエスト・バグ報告は [Issues](https://github.com/IwatsukaYura/pdf_reader_english/issues) へどうぞ。
 
 ---
 
