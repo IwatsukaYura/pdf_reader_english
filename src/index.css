@@ -1,0 +1,44 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply m-0 bg-gray-900 text-gray-100 font-sans;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+    height: 100vh;
+    width: 100vw;
+  }
+
+  #root {
+    @apply h-screen w-screen flex flex-col;
+  }
+}
+
+@layer components {
+  /* ハイライトカラー */
+  .highlight-yellow { background-color: #FFF17688; }
+  .highlight-green  { background-color: #B9F6CA88; }
+  .highlight-pink   { background-color: #FCE4EC88; }
+  .highlight-cyan   { background-color: #E0F7FA88; }
+
+  /* スクロールバーのカスタマイズ */
+  ::-webkit-scrollbar {
+    @apply w-1.5;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-gray-800;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-600 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500;
+  }
+}

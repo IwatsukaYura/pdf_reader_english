@@ -1,0 +1,33 @@
+{
+    "include": [
+        "src/**/*"
+    ],
+    "compilerOptions": {
+        "composite": true,
+        "outDir": "out/renderer",
+        "lib": [
+            "DOM",
+            "DOM.Iterable",
+            "ESNext"
+        ],
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "jsx": "react-jsx",
+        "types": [
+            "vite/client"
+        ],
+        "baseUrl": ".",
+        "paths": {
+            "@/*": [
+                "src/*"
+            ],
+            "@renderer/*": [
+                "src/*"
+            ]
+        },
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "strict": true
+    }
+}

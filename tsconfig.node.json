@@ -1,0 +1,21 @@
+{
+    "include": [
+        "electron/**/*"
+    ],
+    "compilerOptions": {
+        "composite": true,
+        "outDir": "out/main",
+        "lib": [
+            "ES2022"
+        ],
+        "target": "ES2022",
+        "module": "Node16",
+        "moduleResolution": "Node16",
+        "types": [
+            "node"
+        ],
+        "skipLibCheck": true,
+        "esModuleInterop": true,
+        "strict": true
+    }
+}
