@@ -1,21 +1,36 @@
+export interface HighlightRect {
+    x: number
+    y: number
+    width: number
+    height: number
+}
+
 export interface Highlight {
     id: string
     page: number
     text: string
     color: HighlightColor
-    rects: DOMRect[]
+    /** 選択範囲の座標（scale=1 基準で正規化済み） */
+    rects: HighlightRect[]
     createdAt: string
 }
 
 export type HighlightColor = 'yellow' | 'green' | 'pink' | 'cyan'
+
+export const HIGHLIGHT_COLOR_MAP: Record<HighlightColor, string> = {
+    yellow: '#FFF176',
+    green: '#B9F6CA',
+    pink: '#FCE4EC',
+    cyan: '#E0F7FA'
+}
 
 export interface Note {
     id: string
     page: number
     anchorText?: string
     content: string
-    position: 'left-margin' | 'right-margin' | 'inline'
     createdAt: string
+    updatedAt: string
 }
 
 export interface AnnotationFile {

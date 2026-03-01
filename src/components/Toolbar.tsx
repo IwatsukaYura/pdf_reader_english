@@ -30,9 +30,7 @@ export function Toolbar({ selectedColor, onColorChange, onSave, onOpenSettings }
     const handleOpenFile = async () => {
         try {
             const path = await window.electronAPI.openFile()
-            if (path) {
-                window.dispatchEvent(new CustomEvent('pdf:open', { detail: { path } }))
-            }
+            if (path) window.dispatchEvent(new CustomEvent('pdf:open', { detail: { path } }))
         } catch (err) {
             console.error('ファイルを開くに失敗:', err)
         }
@@ -47,6 +45,7 @@ export function Toolbar({ selectedColor, onColorChange, onSave, onOpenSettings }
 
     return (
         <div className="flex items-center gap-2 px-3 h-10 bg-gray-800 border-b border-gray-700 select-none shrink-0">
+
             {/* ファイルを開く */}
             <button
                 id="btn-open-file"
@@ -99,8 +98,8 @@ export function Toolbar({ selectedColor, onColorChange, onSave, onOpenSettings }
 
                     <div className="w-px h-5 bg-gray-600 mx-1" />
 
-                    {/* ハイライトカラー選択 */}
-                    <span className="text-xs text-gray-400">ハイライト:</span>
+                    {/* ハイライトカラー選択（ポップアップのハイライトボタンで使う色） */}
+                    <span className="text-xs text-gray-400">ハイライト色:</span>
                     <div className="flex gap-1">
                         {HIGHLIGHT_COLORS.map(({ color, label, bg }) => (
                             <button
@@ -113,7 +112,7 @@ export function Toolbar({ selectedColor, onColorChange, onSave, onOpenSettings }
                                     backgroundColor: bg,
                                     outline: selectedColor === color ? '2px solid #60a5fa' : '2px solid transparent',
                                     outlineOffset: 1,
-                                    opacity: selectedColor === color ? 1 : 0.55
+                                    opacity: selectedColor === color ? 1 : 0.5
                                 }}
                             />
                         ))}
@@ -128,8 +127,8 @@ export function Toolbar({ selectedColor, onColorChange, onSave, onOpenSettings }
                     id="btn-save"
                     onClick={onSave}
                     className={`px-3 py-1 text-xs rounded cursor-pointer transition-colors ${isDirty
-                        ? 'bg-orange-500 hover:bg-orange-400 text-white'
-                        : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
+                            ? 'bg-orange-500 hover:bg-orange-400 text-white'
+                            : 'bg-gray-700 hover:bg-gray-600 text-gray-300'
                         }`}
                     title="Cmd+S"
                 >
@@ -137,7 +136,6 @@ export function Toolbar({ selectedColor, onColorChange, onSave, onOpenSettings }
                 </button>
             )}
 
-            {/* 設定ボタン */}
             <button
                 id="btn-settings"
                 onClick={onOpenSettings}
