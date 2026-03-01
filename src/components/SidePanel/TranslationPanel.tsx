@@ -1,4 +1,8 @@
+import { useState } from 'react'
 import { TranslationResult, TranslationHistoryItem } from '../../types/annotation'
+import { useVocabularyStore } from '../../stores/vocabularyStore'
+import { usePdfStore } from '../../stores/pdfStore'
+import { basename } from '../../utils/pathUtils'
 
 interface TranslationPanelProps {
     result: TranslationResult | null
@@ -6,17 +10,34 @@ interface TranslationPanelProps {
     isLoading: boolean
     error: string | null
     selectedText: string
-    onSaveToVocabulary?: (text: string, result: TranslationResult) => void
 }
 
-export function TranslationPanel({
-    result,
-    history,
-    isLoading,
-    error,
-    selectedText,
-    onSaveToVocabulary
-}: TranslationPanelProps) {
+export function TranslationPanel({ result, history, isLoading, error, selectedText }: TranslationPanelProps) {
+    const { add, entries } = useVocabularyStore()
+    const { pdfPath, currentPage } = usePdfStore()
+    const [saveStatus, setSaveStatus] = useState<'idle' | 'saved' | 'duplicate'>('idle')
+
+    // 現在の選択テキストが単語帳に保存済みか確認
+    const isAlreadySaved = selectedText
+        ? entries.some((e) => e.word.toLowerCase() === selectedText.trim().toLowerCase() && e.sourcePdf === (pdfPath ?? ''))
+        : false
+
+    const handleSaveVocab = async () => {
+        if (!result || !selectedText || !pdfPath) return
+        const isNew = await add({
+            word: selectedText.trim(),
+            meaning: result.text,
+            partOfSpeech: result.partOfSpeech,
+            example: result.example,
+            phonetic: result.phonetic,
+            sourcePdf: pdfPath,
+            sourcePdfName: basename(pdfPath),
+            page: currentPage
+        })
+        setSaveStatus(isNew ? 'saved' : 'duplicate')
+        setTimeout(() => setSaveStatus('idle'), 2500)
+    }
+
     return (
         <div className="flex flex-col h-full">
             {/* 翻訳結果メインエリア */}
@@ -38,7 +59,7 @@ export function TranslationPanel({
 
                 {!isLoading && !error && result && (
                     <div className="space-y-3">
-                        {/* 単語名 */}
+                        {/* 単語名 + 発音記号 */}
                         {result.word && (
                             <div className="border-b border-gray-700 pb-2">
                                 <div className="flex items-baseline gap-2">
@@ -72,29 +93,41 @@ export function TranslationPanel({
                             </div>
                         )}
 
-                        {/* 単語帳に保存ボタン */}
-                        {onSaveToVocabulary && selectedText && (
-                            <button
-                                id="btn-save-vocabulary"
-                                onClick={() => onSaveToVocabulary(selectedText, result)}
-                                className="w-full mt-2 px-3 py-1.5 text-xs bg-indigo-600 hover:bg-indigo-500 rounded transition-colors"
-                            >
-                                📚 単語帳に保存
-                            </button>
-                        )}
+                        {/* 📚 単語帳に保存ボタン */}
+                        <div className="pt-1">
+                            {saveStatus === 'saved' ? (
+                                <div className="w-full py-1.5 text-xs text-center text-green-400 bg-green-400/10 rounded border border-green-400/30">
+                                    ✅ 単語帳に保存しました
+                                </div>
+                            ) : saveStatus === 'duplicate' ? (
+                                <div className="w-full py-1.5 text-xs text-center text-yellow-400 bg-yellow-400/10 rounded border border-yellow-400/30">
+                                    ⚠️ この単語・PDFはすでに保存済みです
+                                </div>
+                            ) : (
+                                <button
+                                    id="btn-save-vocabulary"
+                                    onClick={handleSaveVocab}
+                                    disabled={!pdfPath || isAlreadySaved}
+                                    className={`w-full px-3 py-2 text-xs rounded transition-colors cursor-pointer font-medium ${isAlreadySaved
+                                        ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                                        : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                                        }`}
+                                >
+                                    {isAlreadySaved ? '✓ 単語帳に保存済み' : '📚 単語帳に保存'}
+                                </button>
+                            )}
+                        </div>
                     </div>
                 )}
 
                 {!isLoading && !error && !result && (
-                    <p className="text-xs text-gray-500">
-                        テキストを選択すると翻訳が表示されます
-                    </p>
+                    <p className="text-xs text-gray-500">テキストを選択すると翻訳が表示されます</p>
                 )}
             </div>
 
             {/* 翻訳履歴 */}
             {history.length > 0 && (
-                <div className="border-t border-gray-700 p-3">
+                <div className="border-t border-gray-700 p-3 shrink-0">
                     <div className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
                         履歴
                     </div>

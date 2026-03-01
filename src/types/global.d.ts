@@ -8,6 +8,19 @@ interface Settings {
     notionAutoSync: boolean
 }
 
+interface VocabEntry {
+    id: string
+    word: string
+    meaning: string
+    partOfSpeech?: string
+    example?: string
+    phonetic?: string
+    sourcePdf: string
+    sourcePdfName: string
+    page: number
+    savedAt: string
+}
+
 declare global {
     interface Window {
         electronAPI: {
@@ -19,6 +32,11 @@ declare global {
             setSettings: (settings: Settings) => Promise<void>
             getPdfUrl: (pdfPath: string) => Promise<string>
             getFilePath: (file: File) => string
+            // 単語帳
+            vocabGetAll: () => Promise<VocabEntry[]>
+            vocabAdd: (entry: VocabEntry) => Promise<boolean>
+            vocabRemove: (id: string) => Promise<void>
+            vocabExportCsv: () => Promise<string>
         }
     }
 }

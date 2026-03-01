@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { TranslationPanel } from './TranslationPanel'
 import { NotesPanel } from './NotesPanel'
+import { VocabularyPanel } from './VocabularyPanel'
 import { TranslationResult, TranslationHistoryItem } from '../../types/annotation'
 
 type Tab = 'translation' | 'vocabulary' | 'notes'
@@ -63,8 +64,8 @@ export function SidePanel({
                         id={`tab-${tab.id}`}
                         onClick={() => setActiveTab(tab.id)}
                         className={`flex-1 py-2 text-xs transition-colors cursor-pointer ${activeTab === tab.id
-                                ? 'text-white border-b-2 border-blue-400'
-                                : 'text-gray-400 hover:text-gray-200'
+                            ? 'text-white border-b-2 border-blue-400'
+                            : 'text-gray-400 hover:text-gray-200'
                             }`}
                     >
                         {tab.label}
@@ -84,10 +85,7 @@ export function SidePanel({
                     />
                 )}
                 {activeTab === 'vocabulary' && (
-                    <div className="flex flex-col items-center justify-center h-full gap-2 text-gray-500">
-                        <div className="text-3xl opacity-30">📚</div>
-                        <p className="text-xs">単語帳機能（Phase 3）</p>
-                    </div>
+                    <VocabularyPanel />
                 )}
                 {activeTab === 'notes' && (
                     <NotesPanel
