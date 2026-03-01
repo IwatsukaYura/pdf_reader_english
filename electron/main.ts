@@ -4,29 +4,7 @@ import Store from 'electron-store'
 import fs from 'fs/promises'
 import axios from 'axios'
 import { pathToFileURL } from 'url'
-
-interface Settings {
-    deeplApiKey: string
-    notionToken: string
-    notionDatabaseId: string
-    translateTo: string
-    sidePanelWidth: number
-    autoSave: boolean
-    notionAutoSync: boolean
-}
-
-interface VocabEntry {
-    id: string
-    word: string
-    meaning: string
-    partOfSpeech?: string
-    example?: string
-    phonetic?: string
-    sourcePdf: string
-    sourcePdfName: string
-    page: number
-    savedAt: string
-}
+import type { Settings, VocabEntry } from './preload'
 
 // アプリ設定ストア
 const store = new Store<{ settings: Settings }>({

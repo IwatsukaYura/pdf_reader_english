@@ -4,10 +4,9 @@ import { usePdfStore } from '../../stores/pdfStore'
 
 export function VocabularyPanel() {
     const { entries, load, remove } = useVocabularyStore()
-    const { goToPage } = usePdfStore()
+    const { goToPage, pdfPath } = usePdfStore()
     const [searchQuery, setSearchQuery] = useState('')
     const [filterMode, setFilterMode] = useState<'all' | 'current'>('all')
-    const { pdfPath } = usePdfStore()
 
     // 初回マウント時に単語帳をロード
     useEffect(() => { load() }, [load])

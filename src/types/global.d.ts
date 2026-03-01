@@ -1,25 +1,13 @@
-interface Settings {
-    deeplApiKey: string
-    notionToken: string
-    notionDatabaseId: string
-    translateTo: string
-    sidePanelWidth: number
-    autoSave: boolean
-    notionAutoSync: boolean
-}
+/**
+ * Electron contextBridge で公開される window.electronAPI の型宣言
+ *
+ * 各型の Single Source of Truth:
+ *  - VocabEntry → src/types/vocab.ts
+ *  - Settings   → src/types/settings.ts
+ */
 
-interface VocabEntry {
-    id: string
-    word: string
-    meaning: string
-    partOfSpeech?: string
-    example?: string
-    phonetic?: string
-    sourcePdf: string
-    sourcePdfName: string
-    page: number
-    savedAt: string
-}
+import type { VocabEntry } from './vocab'
+import type { Settings } from './settings'
 
 declare global {
     interface Window {
@@ -41,4 +29,4 @@ declare global {
     }
 }
 
-export { }
+export type { Settings, VocabEntry }

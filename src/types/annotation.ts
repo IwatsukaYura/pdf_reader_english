@@ -40,19 +40,6 @@ export interface AnnotationFile {
     notes: Note[]
 }
 
-export interface VocabularyEntry {
-    id: string
-    word: string
-    meaning: string
-    partOfSpeech: string
-    example: string
-    exampleTranslation?: string
-    sourcePdf: string
-    page: number
-    savedAt: string
-    notionPageUrl?: string
-    syncedToNotion: boolean
-}
 
 export interface TranslationResult {
     text: string

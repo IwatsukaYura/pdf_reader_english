@@ -1,14 +1,6 @@
 import { useState, useEffect } from 'react'
+import type { Settings } from '../types/settings'
 
-interface Settings {
-    deeplApiKey: string
-    translateTo: string
-    notionToken: string
-    notionDatabaseId: string
-    sidePanelWidth: number
-    autoSave: boolean
-    notionAutoSync: boolean
-}
 
 interface SettingsModalProps {
     onClose: () => void

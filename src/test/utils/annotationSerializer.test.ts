@@ -26,8 +26,8 @@ describe('annotationSerializer', () => {
                 page: 42,
                 anchorText: 'eloquent',
                 content: '## メモ\n重要な単語',
-                position: 'right-margin',
-                createdAt: '2026-02-28T10:01:00Z'
+                createdAt: '2026-02-28T10:01:00Z',
+                updatedAt: '2026-02-28T10:01:00Z'
             }
         ]
     }

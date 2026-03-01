@@ -1,17 +1,8 @@
 import { create } from 'zustand'
+import { VocabEntry } from '../types/vocab'
+import { nanoid } from '../utils/nanoid'
 
-export interface VocabEntry {
-    id: string
-    word: string
-    meaning: string
-    partOfSpeech?: string
-    example?: string
-    phonetic?: string
-    sourcePdf: string
-    sourcePdfName: string
-    page: number
-    savedAt: string
-}
+export type { VocabEntry }
 
 interface VocabularyState {
     entries: VocabEntry[]
@@ -20,8 +11,6 @@ interface VocabularyState {
     add: (entry: Omit<VocabEntry, 'id' | 'savedAt'>) => Promise<boolean>
     remove: (id: string) => Promise<void>
 }
-
-const nanoid = () => Math.random().toString(36).slice(2, 11)
 
 export const useVocabularyStore = create<VocabularyState>((set, get) => ({
     entries: [],

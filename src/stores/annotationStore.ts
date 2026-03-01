@@ -1,6 +1,7 @@
 import { create } from 'zustand'
 import { Highlight, HighlightColor, Note, AnnotationFile } from '../types/annotation'
 import { createEmptyAnnotationFile } from '../utils/annotationSerializer'
+import { nanoid } from '../utils/nanoid'
 
 interface AnnotationState {
     pdfPath: string | null
@@ -22,8 +23,6 @@ interface AnnotationState {
     markClean: () => void
     getAnnotationFile: () => AnnotationFile | null
 }
-
-const nanoid = () => Math.random().toString(36).slice(2, 11)
 
 export const useAnnotationStore = create<AnnotationState>((set, get) => ({
     pdfPath: null,

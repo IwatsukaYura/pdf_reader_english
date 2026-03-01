@@ -9,6 +9,9 @@ import { useAnnotations } from './hooks/useAnnotations'
 import { usePdfStore } from './stores/pdfStore'
 import { HighlightColor } from './types/annotation'
 
+/** デフォルトのサイドパネル幅（px）。将来はSettingsのsidePanelWidthを使用 */
+const DEFAULT_SIDE_PANEL_WIDTH = 320
+
 export default function App() {
     const [selectedColor, setSelectedColor] = useState<HighlightColor>('yellow')
     const [selectedText, setSelectedText] = useState('')
@@ -65,7 +68,7 @@ export default function App() {
     const handleTranslateRequest = useCallback(
         (text: string) => {
             setSelectedText(text)
-            translate(text)   // DeepL API呼び出し
+            translate(text)
         },
         [translate]
     )
@@ -101,7 +104,7 @@ export default function App() {
                     isTranslating={isLoading}
                     translationError={error}
                     selectedText={selectedText}
-                    width={320}
+                    width={DEFAULT_SIDE_PANEL_WIDTH}
                     pendingNote={pendingNote}
                     onPendingNoteHandled={() => setPendingNote(null)}
                 />

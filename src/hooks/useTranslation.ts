@@ -1,29 +1,35 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback } from 'react'
 import { TranslationResult, TranslationHistoryItem } from '../types/annotation'
-import { debounce } from '../utils/debounce'
-import axios from 'axios'
+import { nanoid } from '../utils/nanoid'
 
 const DICTIONARY_API = 'https://api.dictionaryapi.dev/api/v2/entries/en'
 const MAX_HISTORY = 5
 
+/**
+ * 1単語の場合のみ辞書APIで品詞・例文・発音記号を補完する
+ * 翻訳バックエンドへの依存なしに追加情報を取得（fetch を直接使用）
+ */
 async function fetchDictionaryInfo(word: string): Promise<Partial<TranslationResult>> {
     try {
-        const res = await axios.get(`${DICTIONARY_API}/${encodeURIComponent(word.trim())}`)
-        const entry = res.data?.[0]
+        const res = await fetch(`${DICTIONARY_API}/${encodeURIComponent(word.trim())}`)
+        if (!res.ok) return {}
+        const data = await res.json() as unknown[]
+        const entry = (data as Record<string, unknown>[])?.[0]
         if (!entry) return {}
-        const meaning = entry.meanings?.[0]
-        const def = meaning?.definitions?.[0]
+        const meanings = entry.meanings as Record<string, unknown>[] | undefined
+        const meaning = meanings?.[0]
+        const definitions = meaning?.definitions as Record<string, unknown>[] | undefined
+        const def = definitions?.[0]
         return {
-            partOfSpeech: meaning?.partOfSpeech ?? '',
-            example: def?.example ?? '',
-            phonetic: entry.phonetic ?? ''
+            partOfSpeech: (meaning?.partOfSpeech as string) ?? '',
+            example: (def?.example as string) ?? '',
+            phonetic: (entry.phonetic as string) ?? ''
         }
     } catch {
         return {}
     }
 }
 
-const nanoid = () => Math.random().toString(36).slice(2, 11)
 const isSingleWord = (text: string) => text.trim().split(/\s+/).length === 1
 
 export function useTranslation() {
@@ -32,7 +38,7 @@ export function useTranslation() {
     const [isLoading, setIsLoading] = useState(false)
     const [error, setError] = useState<string | null>(null)
 
-    const translateText = useCallback(async (text: string) => {
+    const translate = useCallback(async (text: string) => {
         const trimmed = text.trim()
         if (!trimmed || trimmed.length < 2) return
 
@@ -71,8 +77,5 @@ export function useTranslation() {
         setIsLoading(false)
     }, [])
 
-    // 200msデバウンス版（自動翻訳用、現在は未使用）
-    const debouncedTranslate = useRef(debounce(translateText, 200)).current
-
-    return { result, history, isLoading, error, translate: translateText, debouncedTranslate }
+    return { result, history, isLoading, error, translate }
 }
