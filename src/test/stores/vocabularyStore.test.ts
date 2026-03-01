@@ -2,18 +2,22 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { useVocabularyStore } from '../../stores/vocabularyStore'
 import type { VocabEntry } from '../../types/vocab'
 
-// window.electronAPI のモック
-const mockVocabAdd = vi.fn()
-const mockVocabRemove = vi.fn()
-const mockVocabGetAll = vi.fn()
+// ✅ vi.stubGlobal(window) の代わりに electronServices モジュールをモック
+// → window全体を汚染しない、型安全、インターフェース契約を守ることを強制
+vi.mock('../../services/electronServices', () => ({
+    vocabularyRepository: {
+        getAll: vi.fn(),
+        add: vi.fn(),
+        remove: vi.fn(),
+        exportCsv: vi.fn(),
+    },
+}))
 
-vi.stubGlobal('window', {
-    electronAPI: {
-        vocabGetAll: mockVocabGetAll,
-        vocabAdd: mockVocabAdd,
-        vocabRemove: mockVocabRemove
-    }
-})
+// モック関数への型付き参照
+import { vocabularyRepository } from '../../services/electronServices'
+const mockGetAll = vi.mocked(vocabularyRepository.getAll)
+const mockAdd = vi.mocked(vocabularyRepository.add)
+const mockRemove = vi.mocked(vocabularyRepository.remove)
 
 const makeEntry = (overrides: Partial<VocabEntry> = {}): VocabEntry => ({
     id: 'v_test1',
@@ -32,26 +36,26 @@ beforeEach(() => {
 })
 
 describe('vocabularyStore — load', () => {
-    it('初回loadでelectronAPIから単語リストを取得できる', async () => {
-        const entries = [makeEntry()]
-        mockVocabGetAll.mockResolvedValue(entries)
+    it('初回loadでリポジトリから単語リストを取得できる', async () => {
+        mockGetAll.mockResolvedValue([makeEntry()])
 
         await useVocabularyStore.getState().load()
 
+        expect(mockGetAll).toHaveBeenCalledTimes(1)
         expect(useVocabularyStore.getState().entries).toHaveLength(1)
         expect(useVocabularyStore.getState().isLoaded).toBe(true)
     })
 
-    it('loadは2回目以降はAPIを呼び出さない', async () => {
-        mockVocabGetAll.mockResolvedValue([])
+    it('loadは2回目以降はリポジトリを呼び出さない', async () => {
+        mockGetAll.mockResolvedValue([])
         await useVocabularyStore.getState().load()
         await useVocabularyStore.getState().load()
 
-        expect(mockVocabGetAll).toHaveBeenCalledTimes(1)
+        expect(mockGetAll).toHaveBeenCalledTimes(1)
     })
 
-    it('APIエラー時もisLoadedがtrueになる', async () => {
-        mockVocabGetAll.mockRejectedValue(new Error('IPC error'))
+    it('リポジトリエラー時もisLoadedがtrueになり、entriesは空のまま', async () => {
+        mockGetAll.mockRejectedValue(new Error('IPC error'))
 
         await useVocabularyStore.getState().load()
 
@@ -62,7 +66,7 @@ describe('vocabularyStore — load', () => {
 
 describe('vocabularyStore — add', () => {
     it('新規単語を追加できる', async () => {
-        mockVocabAdd.mockResolvedValue(true)
+        mockAdd.mockResolvedValue(true)
 
         const isNew = await useVocabularyStore.getState().add({
             word: 'eloquent',
@@ -78,7 +82,7 @@ describe('vocabularyStore — add', () => {
     })
 
     it('追加時にid・savedAtが自動生成される', async () => {
-        mockVocabAdd.mockResolvedValue(true)
+        mockAdd.mockResolvedValue(true)
 
         await useVocabularyStore.getState().add({
             word: 'test',
@@ -90,12 +94,11 @@ describe('vocabularyStore — add', () => {
 
         const entry = useVocabularyStore.getState().entries[0]
         expect(entry.id).toMatch(/^v_/)
-        expect(entry.savedAt).toBeTruthy()
         expect(new Date(entry.savedAt).toString()).not.toBe('Invalid Date')
     })
 
-    it('重複単語（サーバー側が重複と判断）の場合はentriesに追加されない', async () => {
-        mockVocabAdd.mockResolvedValue(false) // 重複
+    it('リポジトリが重複と判断した場合はentriesに追加されない', async () => {
+        mockAdd.mockResolvedValue(false)
 
         const isNew = await useVocabularyStore.getState().add({
             word: 'duplicate',
@@ -109,8 +112,8 @@ describe('vocabularyStore — add', () => {
         expect(useVocabularyStore.getState().entries).toHaveLength(0)
     })
 
-    it('新規追加された単語はリストの先頭に追加される', async () => {
-        mockVocabAdd.mockResolvedValue(true)
+    it('新規追加された単語はリストの先頭に挿入される', async () => {
+        mockAdd.mockResolvedValue(true)
         useVocabularyStore.setState({ entries: [makeEntry({ word: 'existing' })] })
 
         await useVocabularyStore.getState().add({
@@ -123,21 +126,38 @@ describe('vocabularyStore — add', () => {
 
         expect(useVocabularyStore.getState().entries[0].word).toBe('new-word')
     })
+
+    it('addはリポジトリに正しい構造のエントリを渡す', async () => {
+        mockAdd.mockResolvedValue(true)
+
+        await useVocabularyStore.getState().add({
+            word: 'precise',
+            meaning: '正確な',
+            sourcePdf: '/path/book.pdf',
+            sourcePdfName: 'book.pdf',
+            page: 10
+        })
+
+        const calledWith = mockAdd.mock.calls[0][0]
+        expect(calledWith.word).toBe('precise')
+        expect(calledWith.id).toBeTruthy()
+        expect(calledWith.savedAt).toBeTruthy()
+    })
 })
 
 describe('vocabularyStore — remove', () => {
     it('IDを指定して単語を削除できる', async () => {
-        mockVocabRemove.mockResolvedValue(undefined)
+        mockRemove.mockResolvedValue(undefined)
         useVocabularyStore.setState({ entries: [makeEntry({ id: 'v_abc' })] })
 
         await useVocabularyStore.getState().remove('v_abc')
 
         expect(useVocabularyStore.getState().entries).toHaveLength(0)
-        expect(mockVocabRemove).toHaveBeenCalledWith('v_abc')
+        expect(mockRemove).toHaveBeenCalledWith('v_abc')
     })
 
     it('存在しないIDでremoveしても他のentriesに影響しない', async () => {
-        mockVocabRemove.mockResolvedValue(undefined)
+        mockRemove.mockResolvedValue(undefined)
         useVocabularyStore.setState({ entries: [makeEntry({ id: 'v_keep' })] })
 
         await useVocabularyStore.getState().remove('v_nonexistent')

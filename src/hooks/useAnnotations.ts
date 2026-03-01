@@ -1,5 +1,6 @@
 import { useCallback, useEffect } from 'react'
 import { useAnnotationStore } from '../stores/annotationStore'
+import { annotationRepository } from '../services/electronServices'
 
 export function useAnnotations() {
     const store = useAnnotationStore()
@@ -19,13 +20,13 @@ export function useAnnotations() {
     const saveAnnotations = useCallback(async () => {
         const file = store.getAnnotationFile()
         if (!file || !store.pdfPath) return
-        await window.electronAPI.saveAnnotation(store.pdfPath, file)
+        await annotationRepository.save(store.pdfPath, file)
         store.markClean()
     }, [store])
 
     const loadAnnotations = useCallback(async (pdfPath: string) => {
         store.setPdfPath(pdfPath)
-        const data = await window.electronAPI.loadAnnotation(pdfPath)
+        const data = await annotationRepository.load(pdfPath)
         if (data) {
             store.loadAnnotations(data as Parameters<typeof store.loadAnnotations>[0])
         }
